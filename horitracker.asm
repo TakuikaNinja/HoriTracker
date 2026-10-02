@@ -522,9 +522,7 @@ ScreenData:
 	encode_static_string $2000, 9, 11, INC1, COPY, "AXIS 2"
 	
 	; ID, speed, rotation, etc.
-	encode_static_string $2000, 9, 13, INC1, COPY, "ID"
-	encode_static_string $2000, 15, 13, INC1, COPY, "\x2a\x2b"
-	encode_static_string $2000, 21, 13, INC1, COPY, "\x2c\x2d"
+	encode_static_string $2000, 9, 13, INC1, COPY, "ID    \x2a\x2b    \x2c\x2d"
 	encode_static_string $2000, 9, 15, INC1, COPY, "UNKNOWN"
 
 ; includes terminator
