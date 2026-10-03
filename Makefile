@@ -1,4 +1,5 @@
 GAME=horitracker
+ZIP_NAME=HoriTracker
 ASSEMBLER=ca65
 LINKER=ld65
 
@@ -9,10 +10,20 @@ all: $(GAME).nes
 $(GAME).nes: $(OBJ_FILES) nes.cfg
 	$(LINKER) -o $(GAME).nes -C nes.cfg $(OBJ_FILES) -m $(GAME).map.txt -Ln $(GAME).labels.txt --dbgfile $(GAME).dbg
 
-.PHONY: clean
+dist: zip
+zip: $(ZIP_NAME).zip
+$(ZIP_NAME).zip: zip.in
+	zip -9 -u $@ -@ < $<
+
+zip.in: $(GAME).nes $(GAME).png README.md
+	echo $(GAME).nes > $@
+	echo $(GAME).png >> $@
+	echo README.md >> $@
+
+.PHONY: clean dist zip
 
 clean:
-	rm -f *.o *.nes *.dbg *.nl *.map.txt *.labels.txt chars.chr.out
+	rm -f *.zip *.o *.nes *.dbg *.nl *.map.txt *.labels.txt
 
 $(OBJ_FILES): $(wildcard *.asm) chars.chr.out
 

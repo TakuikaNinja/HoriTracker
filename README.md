@@ -1,5 +1,7 @@
 # HORI Tracker
 
+by TakuikaNinja
+
 This [mapper 218](https://www.nesdev.org/wiki/INES_Mapper_218) program displays the trackball and button state for the Famicom [HORI Track](https://www.nesdev.org/wiki/Hori_Track) controller.
 
 ## Building
