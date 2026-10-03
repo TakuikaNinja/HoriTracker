@@ -70,3 +70,6 @@
 	.byte $ff
 .endmacro
 
+; convert pallete selections into a single constant attribute byte
+.define ATTRIBUTE(topleft,topright,bottomleft,bottomright) ((bottomright << 6) | (bottomleft << 4) | (topright << 2) | (topleft << 0))
+

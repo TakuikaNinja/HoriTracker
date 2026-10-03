@@ -11,6 +11,7 @@
 	PPU_MASK_MIRROR: .res 1
 	PPU_CTRL_MIRROR: .res 1
 	VRAMBufferIdx: .res 1
+	OAMBufferIdx: .res 1
 	Mode: .res 1
 	Buttons: .res 3
 	Axis: .res 2

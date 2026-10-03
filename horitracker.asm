@@ -76,7 +76,6 @@ Reset:
 		sta $00,x
 		sta $0100,x
 		sta $0200,x
-		dec $0200,x ; offscreen values
 		sta $0300,x
 		sta $0400,x
 		sta $0500,x
@@ -98,6 +97,7 @@ Reset:
 		sta PPU_CTRL
 Main:
 		jsr ProcessHoriTrack
+		jsr MoveSpritesOffscreen
 		jsr DrawScreen
 		jsr WaitForNMI
 		beq Main ; [unconditional branch]
@@ -177,8 +177,9 @@ TransferVRAM:
 		tya
 		and #$7f
 		cmp #$40 ; carry will contain bit 6 (fill flag)
-		beq :+ ; (if length byte is as 0, treat as 64)
 		and #$3f ; otherwise mask length bits to use as counter
+		bne :+ ; (if length byte is 0, treat as 64)
+		lda #$40
 :
 		tay
 		inx
@@ -250,8 +251,9 @@ LoadVRAM:
 		pla
 		and #$7f
 		cmp #$40 ; carry will contain bit 6 (fill flag)
-		beq :+ ; (if length byte is 0, treat as 64)
 		and #$3f ; otherwise mask length bits to use as counter
+		bne :+ ; (if length byte is 0, treat as 64)
+		lda #$40
 :
 		tax
 		bpl @incPtr ; [unconditional branch]
@@ -360,6 +362,19 @@ PrepareVRAMString:
 		stx VRAMBufferIdx ; save index
 		rts
 
+MoveSpritesOffscreen:
+		lda #$ff
+		ldy #$00
+@loop:
+		sta oam,y
+		iny
+		iny
+		iny
+		iny
+		bne @loop
+		sty OAMBufferIdx
+		rts
+
 DrawScreen:
 		lda Mode
 		bne DisplayInputs
@@ -391,7 +406,45 @@ DrawScreen:
 		inc Mode
 		rts
 
+
+		
+; In order of ABsSUDLR
+SpriteY:
+	.byte 175, 183, 159, 159, 175, 183, 183, 183
+SpriteX:
+	.byte 136, 128, 136, 136, 112, 112, 112, 120
+SpriteTile:
+	.byte $3f, $3f, $38, $31, $38, $38, $31, $31
+
 DisplayInputs:
+; Construct sprites for input display
+ButtonSprites:
+		lda Buttons
+		sta temp
+		ldy #$07
+		ldx OAMBufferIdx
+@loop:
+		lda SpriteY,y
+		lsr temp
+		bcs :+ ; button pressed?
+		lda #$ff
+:
+		sta oam,x
+		lda SpriteTile,y
+		sta oam+1,x
+		lda #%00000000 ; attributes
+		sta oam+2,x
+		lda SpriteX,y
+		sta oam+3,x
+		inx
+		inx
+		inx
+		inx
+		dey
+		bpl @loop
+		stx OAMBufferIdx
+;		rts
+
 		lda Axis
 		jsr SignedDisplay
 		vram_addr_string $2000, 17, 10, string_buffer, 2
@@ -435,6 +488,8 @@ SignedDisplay:
 		sty string_buffer
 		sta string_buffer+1
 		rts
+
+
 
 ProcessHoriTrack:
 		ldx #$00
@@ -508,7 +563,10 @@ ProcessHoriTrack:
 PaletteData:
 	.dbyt $3f00
 	.byte 32
-	.repeat 8
+	.repeat 2
+	.byte $0f, $00, $10, $20
+	.byte $0f, $28, $16, $05
+	.byte $0f, $00, $10, $20
 	.byte $0f, $00, $10, $20
 	.endrepeat
 	encode_terminator
@@ -524,6 +582,19 @@ ScreenData:
 	; ID, speed, rotation, etc.
 	encode_static_string $2000, 9, 13, INC1, COPY, "ID    \x2a\x2b    \x2c\x2d"
 	encode_static_string $2000, 9, 15, INC1, COPY, "UNKNOWN"
+	
+	; button display
+	encode_static_string $2000, 14, 20, INC1, COPY, "\x25\x25 \x39"
+	encode_static_string $2000, 14, 21, INC1, COPY, "\x25\x25"
+	encode_static_string $2000, 14, 22, INC1, COPY, "\x38  \x3f"
+	encode_static_string $2000, 14, 23, INC1, COPY, "\x39\x31\x3f"
+	.dbyt $23c0
+	encode_length INC1, FILL, 64
+	.byte ATTRIBUTE 0,0,0,0
+	.dbyt $23eb
+	encode_length INC1, COPY, 2
+	.byte ATTRIBUTE 0,1,0,1
+	.byte ATTRIBUTE 1,0,1,0
 
 ; includes terminator
 CharData:
