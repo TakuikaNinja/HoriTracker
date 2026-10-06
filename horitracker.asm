@@ -455,7 +455,7 @@ ButtonSprites:
 		
 		lda Speed
 		clc
-		adc #$6e ; pick between hi/lo tiles
+		adc #$2e ; pick between hi/lo tiles
 		sta string_buffer
 		vram_addr_string $2000, 18, 13, string_buffer, 1
 		
